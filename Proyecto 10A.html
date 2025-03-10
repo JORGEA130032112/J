@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campeonato Génova - Resultados</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; }
+        h1 { color: green; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px gray; }
+        .match { padding: 15px; border-bottom: 1px solid #ddd; position: relative; font-size: 1.2em; font-weight: bold; }
+        input, button { margin-top: 10px; padding: 8px; width: 100%; }
+        .admin-section { display: none; }
+        img { max-width: 100%; display: block; margin: 5px auto; opacity: 0.7; filter: blur(3px); }
+        .delete-btn { position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; padding: 5px; cursor: pointer; display: none; }
+        .scorers { font-size: 1em; font-weight: normal; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Campeonato Génova - Resultados</h1>
+        <div id="matches"></div>
+        
+        <div id="admin-section" class="admin-section">
+            <h3>Agregar Resultado</h3>
+            <input type="text" id="team1" placeholder="Equipo 1">
+            <input type="number" id="score1" placeholder="Goles Equipo 1">
+            <input type="text" id="team1Scorers" placeholder="Goleadores Equipo 1 (separados por comas)">
+            <input type="text" id="team2" placeholder="Equipo 2">
+            <input type="number" id="score2" placeholder="Goles Equipo 2">
+            <input type="text" id="team2Scorers" placeholder="Goleadores Equipo 2 (separados por comas)">
+            <input type="file" id="photo" accept="image/*">
+            <button onclick="addMatch()">Agregar</button>
+        </div>
+        
+        <input type="password" id="password" placeholder="Contraseña de administrador">
+        <button onclick="authenticate()">Entrar como Administrador</button>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "GENOVA2024";
+        let isAdmin = false;
+        localStorage.setItem("matches", JSON.stringify([]));
+
+        document.addEventListener("DOMContentLoaded", loadMatches);
+
+        function authenticate() {
+            const password = document.getElementById("password").value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById("admin-section").style.display = "block";
+                document.getElementById("password").style.display = "none";
+                event.target.style.display = "none";
+                isAdmin = true;
+                loadMatches();
+            } else {
+                alert("Contraseña incorrecta");
+            }
+        }
+
+        function loadMatches() {
+            const matches = JSON.parse(localStorage.getItem("matches")) || [];
+            const matchContainer = document.getElementById("matches");
+            matchContainer.innerHTML = "";
+            matches.forEach((match, index) => {
+                matchContainer.innerHTML += `
+                    <div class='match'>
+                        <img src='${match.photo}'><br>
+                        <strong>${match.team1}</strong> ${match.score1} - ${match.score2} <strong>${match.team2}</strong><br>
+                        <div class='scorers'><strong>Goleadores ${match.team1}:</strong> ${match.team1Scorers || "Ninguno"}</div>
+                        <div class='scorers'><strong>Goleadores ${match.team2}:</strong> ${match.team2Scorers || "Ninguno"}</div>
+                        ${isAdmin ? `<button class='delete-btn' onclick='deleteMatch(${index})'>Eliminar</button>` : ""}
+                    </div>`;
+            });
+        }
+
+        function addMatch() {
+            const team1 = document.getElementById("team1").value;
+            const score1 = document.getElementById("score1").value;
+            const team1Scorers = document.getElementById("team1Scorers").value;
+            const team2 = document.getElementById("team2").value;
+            const score2 = document.getElementById("score2").value;
+            const team2Scorers = document.getElementById("team2Scorers").value;
+            const photoInput = document.getElementById("photo");
+
+            if (team1 && team2 && score1 !== "" && score2 !== "") {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const matches = JSON.parse(localStorage.getItem("matches")) || [];
+                    matches.push({ team1, score1, team1Scorers, team2, score2, team2Scorers, photo: e.target.result });
+                    localStorage.setItem("matches", JSON.stringify(matches));
+                    loadMatches();
+                };
+                if (photoInput.files[0]) {
+                    reader.readAsDataURL(photoInput.files[0]);
+                } else {
+                    const matches = JSON.parse(localStorage.getItem("matches")) || [];
+                    matches.push({ team1, score1, team1Scorers, team2, score2, team2Scorers, photo: "" });
+                    localStorage.setItem("matches", JSON.stringify(matches));
+                    loadMatches();
+                }
+            } else {
+                alert("Por favor completa todos los campos");
+            }
+        }
+
+        function deleteMatch(index) {
+            if (confirm("¿Seguro que quieres eliminar este resultado?")) {
+                const matches = JSON.parse(localStorage.getItem("matches")) || [];
+                matches.splice(index, 1);
+                localStorage.setItem("matches", JSON.stringify(matches));
+                loadMatches();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
